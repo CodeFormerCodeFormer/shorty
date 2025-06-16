@@ -13,6 +13,11 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
+    {
+        title: 'My Short URLs',
+        href: '/short-urls',
+        icon: Folder,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
