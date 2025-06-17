@@ -24,7 +24,16 @@ class ShortUrlController extends Controller
         }
 
         $perPage = $request->input('per_page', 10);
-        $shortUrls = $query->orderByDesc('created_at')->paginate($perPage)->withQueryString();
+        $sort = $request->input('sort', 'id');
+        $direction = $request->input('direction', 'asc');
+        $allowedSorts = ['id', 'title', 'original_url', 'short_code', 'expires_at', 'visit_count', 'max_visits'];
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'id';
+        }
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'asc';
+        }
+        $shortUrls = $query->orderBy($sort, $direction)->paginate($perPage)->withQueryString();
 
         return Inertia::render('short-urls/index', [
             'shortUrls' => $shortUrls,
@@ -32,6 +41,8 @@ class ShortUrlController extends Controller
                 'search' => $search,
                 'per_page' => $perPage,
             ],
+            'sort' => $sort,
+            'direction' => $direction,
         ]);
     }
 

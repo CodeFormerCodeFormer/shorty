@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
 import { Head, usePage, router, useForm } from '@inertiajs/react';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, Button, TextField, MenuItem, Pagination, Stack, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Alert } from '@mui/material';
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, Button, TextField, MenuItem, Pagination, Stack, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Alert, TableSortLabel } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import AppLayout from '@/layouts/app-layout';
 
+const sortableColumns = [
+  { key: 'id', label: 'ID' },
+  { key: 'title', label: 'Title' },
+  { key: 'original_url', label: 'Original URL' },
+  { key: 'short_code', label: 'Short URL' },
+  { key: 'expires_at', label: 'Expires at' },
+  { key: 'visit_count', label: 'Visits' },
+  { key: 'max_visits', label: 'Max Visits' },
+];
+
 export default function ShortUrlsIndex() {
-  const { shortUrls, filters } = usePage().props as any;
+  const { shortUrls, filters, sort, direction } = usePage().props as any;
   const [search, setSearch] = useState(filters?.search || '');
   const [perPage, setPerPage] = useState(filters?.per_page || 10);
   const [open, setOpen] = useState(false);
@@ -57,6 +67,19 @@ export default function ShortUrlsIndex() {
     });
   };
 
+  const handleSort = (column: string) => {
+    let newDirection = 'asc';
+    if (sort === column) {
+      newDirection = direction === 'asc' ? 'desc' : 'asc';
+    }
+    router.get('/short-urls', {
+      ...filters,
+      sort: column,
+      direction: newDirection,
+      page: 1,
+    });
+  };
+
   return (
     <AppLayout breadcrumbs={[{ title: 'My Short URLs', href: '/short-urls' }]}> 
       <Box sx={{ p: { xs: 1, sm: 2, md: 4 } }}>
@@ -89,13 +112,17 @@ export default function ShortUrlsIndex() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Title</TableCell>
-                <TableCell>Original URL</TableCell>
-                <TableCell>Short URL</TableCell>
-                <TableCell>Expires at</TableCell>
-                <TableCell>Visits</TableCell>
-                <TableCell>Max Visits</TableCell>
+                {sortableColumns.map(col => (
+                  <TableCell key={col.key}>
+                    <TableSortLabel
+                      active={sort === col.key}
+                      direction={sort === col.key ? direction : 'asc'}
+                      onClick={() => handleSort(col.key)}
+                    >
+                      {col.label}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
             <TableBody>
