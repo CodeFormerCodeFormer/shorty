@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
-import { Head, usePage, router } from '@inertiajs/react';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, Button, TextField, MenuItem, Pagination, Stack } from '@mui/material';
+import { Head, usePage, router, useForm } from '@inertiajs/react';
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, Button, TextField, MenuItem, Pagination, Stack, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Alert } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
 import AppLayout from '@/layouts/app-layout';
 
 export default function ShortUrlsIndex() {
   const { shortUrls, filters } = usePage().props as any;
   const [search, setSearch] = useState(filters?.search || '');
   const [perPage, setPerPage] = useState(filters?.per_page || 10);
+  const [open, setOpen] = useState(false);
+  const { data, setData, post, processing, errors, reset } = useForm({
+    title: '',
+    original_url: '',
+    short_code: '',
+    expires_at: '',
+    max_visits: '',
+  });
+  const [success, setSuccess] = useState('');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +31,30 @@ export default function ShortUrlsIndex() {
 
   const handlePageChange = (_: any, value: number) => {
     router.get('/short-urls', { search, per_page: perPage, page: value });
+  };
+
+  const handleOpen = () => {
+    setOpen(true);
+    setSuccess('');
+    reset();
+  };
+  const handleClose = () => setOpen(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setData(e.target.name as keyof typeof data, e.target.value);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSuccess('');
+    post('/short-urls', {
+      onSuccess: () => {
+        setSuccess('Short URL created successfully!');
+        reset();
+        setOpen(false);
+        router.reload();
+      },
+    });
   };
 
   return (
@@ -44,7 +78,7 @@ export default function ShortUrlsIndex() {
             value={perPage}
             onChange={handlePerPageChange}
             size="small"
-            sx={{ minWidth: 160 }}
+            sx={{ minWidth: 120 }}
           >
             {[10, 25, 50, 100].map(opt => (
               <MenuItem key={opt} value={opt}>{opt}</MenuItem>
@@ -105,7 +139,7 @@ export default function ShortUrlsIndex() {
         <Button
           variant="contained"
           color="primary"
-          href="/short-urls/create"
+          onClick={handleOpen}
           sx={{
             position: 'fixed',
             bottom: { xs: 16, sm: 32 },
@@ -120,6 +154,81 @@ export default function ShortUrlsIndex() {
         >
           <AddIcon />
         </Button>
+        <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+          <DialogTitle>
+            New Short URL
+            <IconButton
+              aria-label="close"
+              onClick={handleClose}
+              sx={{ position: 'absolute', right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+            <form id="short-url-form" onSubmit={handleSubmit}>
+              <Stack spacing={2} mt={1}>
+                <TextField
+                  label="Title"
+                  name="title"
+                  value={data.title}
+                  onChange={handleChange}
+                  error={!!errors.title}
+                  helperText={errors.title}
+                  fullWidth
+                  required
+                />
+                <TextField
+                  label="Original URL"
+                  name="original_url"
+                  value={data.original_url}
+                  onChange={handleChange}
+                  error={!!errors.original_url}
+                  helperText={errors.original_url}
+                  fullWidth
+                  required
+                />
+                <TextField
+                  label="Custom path (optional)"
+                  name="short_code"
+                  value={data.short_code}
+                  onChange={handleChange}
+                  error={!!errors.short_code}
+                  helperText={errors.short_code}
+                  fullWidth
+                />
+                <TextField
+                  label="Expiration date"
+                  name="expires_at"
+                  type="datetime-local"
+                  value={data.expires_at}
+                  onChange={handleChange}
+                  error={!!errors.expires_at}
+                  helperText={errors.expires_at}
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                  label="Max visits"
+                  name="max_visits"
+                  type="number"
+                  value={data.max_visits}
+                  onChange={handleChange}
+                  error={!!errors.max_visits}
+                  helperText={errors.max_visits}
+                  fullWidth
+                />
+              </Stack>
+            </form>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button type="submit" form="short-url-form" variant="contained" color="primary" disabled={processing}>
+              Create URL
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </AppLayout>
   );
