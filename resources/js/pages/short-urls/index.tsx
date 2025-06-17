@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, usePage, router } from '@inertiajs/react';
 import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, Button, TextField, MenuItem, Pagination, Stack } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import AppLayout from '@/layouts/app-layout';
 
 export default function ShortUrlsIndex() {
@@ -24,7 +25,7 @@ export default function ShortUrlsIndex() {
 
   return (
     <AppLayout breadcrumbs={[{ title: 'My Short URLs', href: '/short-urls' }]}> 
-      <Box>
+      <Box sx={{ p: { xs: 1, sm: 2, md: 4 } }}>
         <Head title="My URLs" />
         <Typography variant="h4" mb={2}>My Short URLs</Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mb={2} alignItems="center">
@@ -43,7 +44,7 @@ export default function ShortUrlsIndex() {
             value={perPage}
             onChange={handlePerPageChange}
             size="small"
-            sx={{ minWidth: 120 }}
+            sx={{ minWidth: 160 }}
           >
             {[10, 25, 50, 100].map(opt => (
               <MenuItem key={opt} value={opt}>{opt}</MenuItem>
@@ -101,8 +102,23 @@ export default function ShortUrlsIndex() {
             showLastButton
           />
         </Stack>
-        <Button variant="contained" color="primary" sx={{ mt: 2 }} href="/short-urls/create">
-          New URL
+        <Button
+          variant="contained"
+          color="primary"
+          href="/short-urls/create"
+          sx={{
+            position: 'fixed',
+            bottom: { xs: 16, sm: 32 },
+            right: { xs: 16, sm: 32 },
+            borderRadius: '50%',
+            minWidth: 0,
+            width: 56,
+            height: 56,
+            boxShadow: 6,
+            zIndex: 1201,
+          }}
+        >
+          <AddIcon />
         </Button>
       </Box>
     </AppLayout>
