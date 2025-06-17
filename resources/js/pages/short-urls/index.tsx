@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Head, usePage, router, useForm } from '@inertiajs/react';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, Button, TextField, MenuItem, Pagination, Stack, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Alert, TableSortLabel } from '@mui/material';
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, Button, TextField, MenuItem, Pagination, Stack, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Alert, TableSortLabel, Tabs, Tab } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import AppLayout from '@/layouts/app-layout';
+import CircularProgress from '@mui/material/CircularProgress';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 const sortableColumns = [
   { key: 'id', label: 'ID' },
@@ -20,6 +23,12 @@ export default function ShortUrlsIndex() {
   const [search, setSearch] = useState(filters?.search || '');
   const [perPage, setPerPage] = useState(filters?.per_page || 10);
   const [open, setOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [selectedUrl, setSelectedUrl] = useState<any>(null);
+  const [tab, setTab] = useState(0);
+  const [visits, setVisits] = useState<any[] | null>(null);
+  const [chart, setChart] = useState<any[] | null>(null);
+  const [loadingVisits, setLoadingVisits] = useState(false);
   const { data, setData, post, processing, errors, reset } = useForm({
     title: '',
     original_url: '',
@@ -50,6 +59,25 @@ export default function ShortUrlsIndex() {
   };
   const handleClose = () => setOpen(false);
 
+  const handleView = async (url: any) => {
+    setSelectedUrl(url);
+    setViewOpen(true);
+    setVisits(null);
+    setChart(null);
+    setLoadingVisits(true);
+    try {
+      const res = await fetch(`/short-urls/${url.id}`);
+      const data = await res.json();
+      setVisits(data.visits);
+      setChart(data.chart);
+    } catch (e) {
+      setVisits([]);
+      setChart([]);
+    }
+    setLoadingVisits(false);
+  };
+  const handleViewClose = () => setViewOpen(false);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setData(e.target.name as keyof typeof data, e.target.value);
   };
@@ -78,6 +106,10 @@ export default function ShortUrlsIndex() {
       direction: newDirection,
       page: 1,
     });
+  };
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTab(newValue);
   };
 
   return (
@@ -134,7 +166,11 @@ export default function ShortUrlsIndex() {
               {shortUrls.data.map((url: any) => (
                 <TableRow key={url.id}>
                   <TableCell>{url.id}</TableCell>
-                  <TableCell>{url.title}</TableCell>
+                  <TableCell>
+                    <Link href="#" onClick={e => { e.preventDefault(); handleView(url); }} underline="hover">
+                      {url.title}
+                    </Link>
+                  </TableCell>
                   <TableCell>
                     <Link href={url.original_url} target="_blank" rel="noopener noreferrer">
                       {url.original_url}
@@ -254,6 +290,93 @@ export default function ShortUrlsIndex() {
             <Button type="submit" form="short-url-form" variant="contained" color="primary" disabled={processing}>
               Create URL
             </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog open={viewOpen} onClose={handleViewClose} maxWidth="md" fullWidth>
+          <DialogTitle>
+            Short URL Details
+            <IconButton
+              aria-label="close"
+              onClick={handleViewClose}
+              sx={{ position: 'absolute', right: 8, top: 8 }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            {selectedUrl && (
+              <Box>
+                <Typography variant="subtitle1" gutterBottom><b>Title:</b> {selectedUrl.title}</Typography>
+                <Typography variant="subtitle1" gutterBottom><b>Short URL:</b> <Link href={`/j/${selectedUrl.short_code}`} target="_blank" rel="noopener noreferrer">{window.location.origin}/j/{selectedUrl.short_code}</Link></Typography>
+                <Typography variant="subtitle1" gutterBottom><b>Original URL:</b> <Link href={selectedUrl.original_url} target="_blank" rel="noopener noreferrer">{selectedUrl.original_url}</Link></Typography>
+                <Typography variant="subtitle1" gutterBottom><b>Visits:</b> {selectedUrl.visit_count}</Typography>
+                <Typography variant="subtitle1" gutterBottom><b>Max Visits:</b> {selectedUrl.max_visits ?? '-'}</Typography>
+                <Typography variant="subtitle1" gutterBottom><b>Expires at:</b> {selectedUrl.expires_at ? new Date(selectedUrl.expires_at).toLocaleString() : '-'}</Typography>
+                <Typography variant="subtitle1" gutterBottom><b>Created at:</b> {selectedUrl.created_at ? new Date(selectedUrl.created_at).toLocaleString() : '-'}</Typography>
+                <Tabs value={tab} onChange={handleTabChange} sx={{ mt: 2, mb: 2 }}>
+                  <Tab label="Clicks" />
+                  <Tab label="Chart" />
+                  <Tab label="Map" />
+                </Tabs>
+                {tab === 0 && (
+                  <Box>
+                    {loadingVisits ? (
+                      <Stack alignItems="center" py={4}><CircularProgress /></Stack>
+                    ) : visits && visits.length > 0 ? (
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Date</TableCell>
+                            <TableCell>IP</TableCell>
+                            <TableCell>Country</TableCell>
+                            <TableCell>User Agent</TableCell>
+                            <TableCell>Referer</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {visits.map((v) => (
+                            <TableRow key={v.id}>
+                              <TableCell>{v.visited_at ? new Date(v.visited_at).toLocaleString() : '-'}</TableCell>
+                              <TableCell>{v.ip_address}</TableCell>
+                              <TableCell>{v.country ?? '-'}</TableCell>
+                              <TableCell sx={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.user_agent}</TableCell>
+                              <TableCell sx={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.referer ?? '-'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">No clicks found.</Typography>
+                    )}
+                  </Box>
+                )}
+                {tab === 1 && (
+                  <Box minHeight={300} display="flex" alignItems="center" justifyContent="center">
+                    {chart && chart.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={chart} margin={{ top: 16, right: 24, left: 8, bottom: 8 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" />
+                          <YAxis allowDecimals={false} />
+                          <Tooltip />
+                          <Line type="monotone" dataKey="count" stroke="#1976d2" strokeWidth={2} dot={{ r: 4 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">No data for the last 7 days.</Typography>
+                    )}
+                  </Box>
+                )}
+                {tab === 2 && (
+                  <Box>
+                    <Typography variant="body2">Map (coming soon)</Typography>
+                  </Box>
+                )}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleViewClose}>Close</Button>
           </DialogActions>
         </Dialog>
       </Box>

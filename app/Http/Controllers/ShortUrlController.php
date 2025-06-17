@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\ShortUrl;
+use App\Models\ShortUrlVisit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Illuminate\Support\Carbon;
 
 class ShortUrlController extends Controller
 {
@@ -68,5 +70,33 @@ class ShortUrlController extends Controller
         ]);
 
         return redirect()->route('short-urls.index');
+    }
+
+    public function show($id)
+    {
+        $shortUrl = ShortUrl::where('user_id', auth()->id())->findOrFail($id);
+        $visits = ShortUrlVisit::where('short_url_id', $shortUrl->id)
+            ->orderByDesc('visited_at')
+            ->get();
+        // Gráfico: cliques por dia nos últimos 7 dias
+        $start = Carbon::now()->subDays(6)->startOfDay();
+        $end = Carbon::now()->endOfDay();
+        $clicksByDay = ShortUrlVisit::where('short_url_id', $shortUrl->id)
+            ->whereBetween('visited_at', [$start, $end])
+            ->get()
+            ->groupBy(fn($v) => Carbon::parse($v->visited_at)->format('Y-m-d'));
+        $chart = [];
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+            $key = $date->format('Y-m-d');
+            $chart[] = [
+                'date' => $key,
+                'count' => isset($clicksByDay[$key]) ? count($clicksByDay[$key]) : 0,
+            ];
+        }
+        return response()->json([
+            'shortUrl' => $shortUrl,
+            'visits' => $visits,
+            'chart' => $chart,
+        ]);
     }
 }

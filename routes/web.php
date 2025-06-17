@@ -19,8 +19,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::get('/short-urls', [ShortUrlController::class, 'index'])->name('short-urls.index');
-    Route::get('/short-urls/create', fn() => Inertia::render('short-urls/create'))->name('short-urls.create');
+    Route::get('/short-urls/create', fn() => Inertia\Inertia::render('short-urls/create'))->name('short-urls.create');
     Route::post('/short-urls', [ShortUrlController::class, 'store'])->name('short-urls.store');
+    Route::get('/short-urls/{id}', [ShortUrlController::class, 'show'])->name('short-urls.show');
 });
 
 Route::get('/j/{short_code}', function (Request $request, $short_code) {
