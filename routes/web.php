@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return redirect()->route('dashboard');
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
