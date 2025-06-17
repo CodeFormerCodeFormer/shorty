@@ -2,6 +2,8 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
+import DownloadIcon from '@mui/icons-material/Download';
+import ShareIcon from '@mui/icons-material/Share';
 import {
     Alert,
     Box,
@@ -185,6 +187,24 @@ export default function ShortUrlsIndex() {
         }
     };
 
+    // Função para compartilhar o link curto
+    const handleShareShortUrl = async (shortUrl: string) => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Short URL',
+                    text: 'Confira este link encurtado:',
+                    url: shortUrl,
+                });
+            } catch (e) {
+                // usuário cancelou ou não suportado
+            }
+        } else {
+            navigator.clipboard.writeText(shortUrl);
+            alert('Link copiado para a área de transferência!');
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={[{ title: 'My Short URLs', href: '/short-urls' }]}>
             <Box sx={{ p: { xs: 1, sm: 2, md: 4 } }}>
@@ -250,9 +270,22 @@ export default function ShortUrlsIndex() {
                                         </Link>
                                     </TableCell>
                                     <TableCell>
-                                        <Link href={`/j/${url.short_code}`} target="_blank" rel="noopener noreferrer">
-                                            {window.location.origin}/j/{url.short_code}
-                                        </Link>
+                                        <Box display="flex" alignItems="center" gap={0.5}>
+                                            <Link href={`/j/${url.short_code}`} target="_blank" rel="noopener noreferrer">
+                                                {window.location.origin}/j/{url.short_code}
+                                            </Link>
+                                            <TooltipMUI title="Compartilhar" arrow>
+                                                <IconButton
+                                                    size="small"
+                                                    color="primary"
+                                                    sx={{ ml: 0.5, p: '3px' }}
+                                                    onClick={() => handleShareShortUrl(`${window.location.origin}/j/${url.short_code}`)}
+                                                    aria-label="Compartilhar link curto"
+                                                >
+                                                    <ShareIcon fontSize="small" />
+                                                </IconButton>
+                                            </TooltipMUI>
+                                        </Box>
                                     </TableCell>
                                     <TableCell>{url.expires_at ? new Date(url.expires_at).toLocaleString() : '-'}</TableCell>
                                     <TableCell>{url.visit_count}</TableCell>
@@ -395,9 +428,22 @@ export default function ShortUrlsIndex() {
                                         </Typography>
                                         <Typography variant="subtitle1" gutterBottom>
                                             <b>Short URL:</b>{' '}
-                                            <Link href={`/j/${selectedUrl.short_code}`} target="_blank" rel="noopener noreferrer">
-                                                {window.location.origin}/j/{selectedUrl.short_code}
-                                            </Link>
+                                            <Box component="span" display="inline-flex" alignItems="center" gap={0.5}>
+                                                <Link href={`/j/${selectedUrl.short_code}`} target="_blank" rel="noopener noreferrer">
+                                                    {window.location.origin}/j/{selectedUrl.short_code}
+                                                </Link>
+                                                <TooltipMUI title="Compartilhar" arrow>
+                                                    <IconButton
+                                                        size="small"
+                                                        color="primary"
+                                                        sx={{ ml: 0.5, p: '3px' }}
+                                                        onClick={() => handleShareShortUrl(`${window.location.origin}/j/${selectedUrl.short_code}`)}
+                                                        aria-label="Compartilhar link curto"
+                                                    >
+                                                        <ShareIcon fontSize="small" />
+                                                    </IconButton>
+                                                </TooltipMUI>
+                                            </Box>
                                         </Typography>
                                         <Typography variant="subtitle1" gutterBottom>
                                             <b>Original URL:</b>{' '}
@@ -428,9 +474,11 @@ export default function ShortUrlsIndex() {
                                         />
                                         <Box display="flex" gap={1}>
                                             <Button variant="outlined" size="small" onClick={() => handleDownloadQr(selectedUrl)}>
+                                                <DownloadIcon fontSize="small" sx={{ mr: 0.5 }} />
                                                 Download
                                             </Button>
                                             <Button variant="outlined" size="small" onClick={() => handleShareQr(selectedUrl)}>
+                                                <ShareIcon fontSize="small" sx={{ mr: 0.5 }} />
                                                 Share
                                             </Button>
                                         </Box>
