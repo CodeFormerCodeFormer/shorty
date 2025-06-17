@@ -31,6 +31,7 @@ import {
 import CircularProgress from '@mui/material/CircularProgress';
 import TooltipMUI from '@mui/material/Tooltip';
 import { scaleLinear } from 'd3-scale';
+import { QRCodeCanvas } from 'qrcode.react';
 import React, { useState } from 'react';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -148,6 +149,40 @@ export default function ShortUrlsIndex() {
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
         setTab(newValue);
+    };
+
+    // Função para baixar o QR code como imagem
+    const handleDownloadQr = (url: { short_code: string }) => {
+        const canvas = document.querySelector('canvas[data-qrcode="' + url.short_code + '"]') as HTMLCanvasElement;
+        if (canvas) {
+            const link = document.createElement('a');
+            link.download = `short-url-${url.short_code}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    };
+
+    // Função para compartilhar o QR code (usando Web Share API se disponível)
+    const handleShareQr = async (url: { short_code: string }) => {
+        const canvas = document.querySelector('canvas[data-qrcode="' + url.short_code + '"]') as HTMLCanvasElement;
+        if (canvas) {
+            canvas.toBlob(async (blob) => {
+                if (navigator.share && blob) {
+                    const file = new File([blob], `short-url-${url.short_code}.png`, { type: blob.type });
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Short URL QR Code',
+                            text: 'Veja o QR code do link encurtado!',
+                        });
+                    } catch (e) {
+                        // usuário cancelou ou não suportado
+                    }
+                } else {
+                    alert('Compartilhamento não suportado neste navegador.');
+                }
+            });
+        }
     };
 
     return (
@@ -353,37 +388,59 @@ export default function ShortUrlsIndex() {
                     <DialogContent dividers>
                         {selectedUrl && (
                             <Box>
-                                <Typography variant="subtitle1" gutterBottom>
-                                    <b>Title:</b> {selectedUrl.title}
-                                </Typography>
-                                <Typography variant="subtitle1" gutterBottom>
-                                    <b>Short URL:</b>{' '}
-                                    <Link href={`/j/${selectedUrl.short_code}`} target="_blank" rel="noopener noreferrer">
-                                        {window.location.origin}/j/{selectedUrl.short_code}
-                                    </Link>
-                                </Typography>
-                                <Typography variant="subtitle1" gutterBottom>
-                                    <b>Original URL:</b>{' '}
-                                    <Link href={selectedUrl.original_url} target="_blank" rel="noopener noreferrer">
-                                        {selectedUrl.original_url}
-                                    </Link>
-                                </Typography>
-                                <Typography variant="subtitle1" gutterBottom>
-                                    <b>Visits:</b> {selectedUrl.visit_count}
-                                </Typography>
-                                <Typography variant="subtitle1" gutterBottom>
-                                    <b>Max Visits:</b> {selectedUrl.max_visits ?? '-'}
-                                </Typography>
-                                <Typography variant="subtitle1" gutterBottom>
-                                    <b>Expires at:</b> {selectedUrl.expires_at ? new Date(selectedUrl.expires_at).toLocaleString() : '-'}
-                                </Typography>
-                                <Typography variant="subtitle1" gutterBottom>
-                                    <b>Created at:</b> {selectedUrl.created_at ? new Date(selectedUrl.created_at).toLocaleString() : '-'}
-                                </Typography>
+                                <Box display="flex" flexDirection="row" gap={2}>
+                                    <Box flex={3}>
+                                        <Typography variant="subtitle1" gutterBottom>
+                                            <b>Title:</b> {selectedUrl.title}
+                                        </Typography>
+                                        <Typography variant="subtitle1" gutterBottom>
+                                            <b>Short URL:</b>{' '}
+                                            <Link href={`/j/${selectedUrl.short_code}`} target="_blank" rel="noopener noreferrer">
+                                                {window.location.origin}/j/{selectedUrl.short_code}
+                                            </Link>
+                                        </Typography>
+                                        <Typography variant="subtitle1" gutterBottom>
+                                            <b>Original URL:</b>{' '}
+                                            <Link href={selectedUrl.original_url} target="_blank" rel="noopener noreferrer">
+                                                {selectedUrl.original_url}
+                                            </Link>
+                                        </Typography>
+                                        <Typography variant="subtitle1" gutterBottom>
+                                            <b>Visits:</b> {selectedUrl.visit_count}
+                                        </Typography>
+                                        <Typography variant="subtitle1" gutterBottom>
+                                            <b>Max Visits:</b> {selectedUrl.max_visits ?? '-'}
+                                        </Typography>
+                                        <Typography variant="subtitle1" gutterBottom>
+                                            <b>Expires at:</b> {selectedUrl.expires_at ? new Date(selectedUrl.expires_at).toLocaleString() : '-'}
+                                        </Typography>
+                                        <Typography variant="subtitle1" gutterBottom>
+                                            <b>Created at:</b> {selectedUrl.created_at ? new Date(selectedUrl.created_at).toLocaleString() : '-'}
+                                        </Typography>
+                                    </Box>
+                                    <Box flex={2} display="flex" flexDirection="column" alignItems="center" justifyContent="center" gap={2}>
+                                        <QRCodeCanvas
+                                            id="qr-code"
+                                            value={`${window.location.origin}/j/${selectedUrl.short_code}`}
+                                            size={128}
+                                            includeMargin={true}
+                                            data-qrcode={selectedUrl.short_code}
+                                        />
+                                        <Box display="flex" gap={1}>
+                                            <Button variant="outlined" size="small" onClick={() => handleDownloadQr(selectedUrl)}>
+                                                Download
+                                            </Button>
+                                            <Button variant="outlined" size="small" onClick={() => handleShareQr(selectedUrl)}>
+                                                Share
+                                            </Button>
+                                        </Box>
+                                    </Box>
+                                </Box>
                                 <Tabs value={tab} onChange={handleTabChange} sx={{ mt: 2, mb: 2 }}>
                                     <Tab label="Clicks" />
                                     <Tab label="Chart" />
                                     <Tab label="Map" />
+                                    <Tab label="QR Code" />
                                 </Tabs>
                                 {tab === 0 && (
                                     <Box>
@@ -532,6 +589,31 @@ export default function ShortUrlsIndex() {
                                             </Box>
                                         );
                                     })()}
+                                {tab === 3 && (
+                                    <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
+                                        <Typography variant="subtitle1" gutterBottom>
+                                            QR Code for Short URL
+                                        </Typography>
+                                        <QRCodeCanvas
+                                            id="qr-code"
+                                            value={`${window.location.origin}/j/${selectedUrl.short_code}`}
+                                            size={256}
+                                            style={{ height: 'auto', maxWidth: '100%', width: 256 }}
+                                        />
+                                        <Typography variant="caption" color="text.secondary" mt={1}>
+                                            Scan the QR code or click the link below:
+                                        </Typography>
+                                        <Link
+                                            href={`/j/${selectedUrl.short_code}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            variant="body2"
+                                            sx={{ wordBreak: 'break-all' }}
+                                        >
+                                            {window.location.origin}/j/{selectedUrl.short_code}
+                                        </Link>
+                                    </Box>
+                                )}
                             </Box>
                         )}
                     </DialogContent>
