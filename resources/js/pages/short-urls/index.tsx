@@ -8,6 +8,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { scaleLinear } from 'd3-scale';
+import TooltipMUI from '@mui/material/Tooltip';
 
 const sortableColumns = [
   { key: 'id', label: 'ID' },
@@ -39,6 +40,7 @@ export default function ShortUrlsIndex() {
     max_visits: '',
   });
   const [success, setSuccess] = useState('');
+  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -378,37 +380,59 @@ export default function ShortUrlsIndex() {
                     )}
                   </Box>
                 )}
-                {tab === 2 && (
-                  <Box minHeight={350}>
-                    <ComposableMap projectionConfig={{ scale: 140 }} width={800} height={350} style={{ width: '100%', height: 'auto' }}>
-                      <Geographies geography="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json">
-                        {({ geographies }) => {
-                          const dataByCountryName = countryClicks ?? {};
-                          const max = Math.max(1, ...Object.values(dataByCountryName));
-                          const colorScale = scaleLinear()
-                            .domain([0, max])
-                            .range(["#e0f2fe", "#0284c7"]);
-                          return geographies.map(geo => {
-                            const name = geo.properties.name;
-                            const count = dataByCountryName[name] ?? 0;
-                            return (
-                              <Geography
-                                key={geo.rsmKey}
-                                geography={geo}
-                                fill={count ? colorScale(count) : "#F5F4F6"}
-                                stroke="#DDD"
-                                style={{ outline: 'none' }}
-                              />
-                            );
-                          });
-                        }}
-                      </Geographies>
-                    </ComposableMap>
-                    <Typography variant="caption" color="text.secondary" mt={1}>
-                      {countryClicks ? 'Mapa de calor por país (dados reais)' : 'Mapa de calor por país (mock)'}
-                    </Typography>
-                  </Box>
-                )}
+                {tab === 2 && (() => {
+                  const dataByCountryName = countryClicks ?? {};
+                  const max = Math.max(1, ...Object.values(dataByCountryName));
+                  const colorScale = scaleLinear<string>()
+                    .domain([0, max])
+                    .range(["#e0f2fe", "#0284c7"]);
+                  return (
+                    <Box minHeight={350}>
+                      <ComposableMap projectionConfig={{ scale: 140 }} width={800} height={350} style={{ width: '100%', height: 'auto' }}>
+                        <Geographies geography="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json">
+                          {({ geographies }) =>
+                            geographies.map((geo: any) => {
+                              const name = geo.properties.name;
+                              const count = dataByCountryName[name] ?? 0;
+                              const fillColor = count ? colorScale(count) : "#F5F4F6";
+                              return (
+                                <TooltipMUI key={geo.rsmKey} title={count ? `${name}: ${count} click${count > 1 ? 's' : ''}` : name} arrow>
+                                  <Geography
+                                    geography={geo}
+                                    fill={fillColor}
+                                    stroke="#DDD"
+                                    style={{ outline: 'none', cursor: count ? 'pointer' : 'default' }}
+                                    onMouseEnter={() => setHoveredCountry(name)}
+                                    onMouseLeave={() => setHoveredCountry(null)}
+                                  />
+                                </TooltipMUI>
+                              );
+                            })
+                          }
+                        </Geographies>
+                      </ComposableMap>
+                      <Typography variant="caption" color="text.secondary" mt={1}>
+                        {countryClicks ? 'Heatmap by country (real data)' : 'Heatmap by country (mock)'}
+                      </Typography>
+                      {/* Country click legend */}
+                      {countryClicks && Object.keys(countryClicks).length > 0 && (
+                        <Box mt={2}>
+                          <Typography variant="subtitle2" mb={1}>Legend:</Typography>
+                          <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                            {Object.entries(countryClicks)
+                              .sort((a, b) => b[1] - a[1])
+                              .map(([name, count]) => (
+                                <Box component="li" key={name} display="flex" alignItems="center" mb={0.5}>
+                                  <Box sx={{ width: 18, height: 18, bgcolor: colorScale(count), border: '1px solid #DDD', borderRadius: 1, mr: 1 }} />
+                                  <Typography variant="body2">{name}: {count} click{count > 1 ? 's' : ''}</Typography>
+                                </Box>
+                              ))}
+                          </Box>
+                        </Box>
+                      )}
+                    </Box>
+                  );
+                })()}
               </Box>
             )}
           </DialogContent>
