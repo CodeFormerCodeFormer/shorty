@@ -19,9 +19,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::get('/short-urls', [ShortUrlController::class, 'index'])->name('short-urls.index');
-    Route::get('/short-urls/create', fn() => Inertia\Inertia::render('short-urls/create'))->name('short-urls.create');
+    Route::get('/short-urls/create', fn() => Inertia::render('short-urls/create'))->name('short-urls.create');
     Route::post('/short-urls', [ShortUrlController::class, 'store'])->name('short-urls.store');
     Route::get('/short-urls/{id}', [ShortUrlController::class, 'show'])->name('short-urls.show');
+    Route::get('/short-urls/{id}/country-clicks', [ShortUrlController::class, 'countryClicks'])->name('short-urls.country-clicks');
 });
 
 Route::get('/j/{short_code}', function (Request $request, $short_code) {
@@ -42,9 +43,10 @@ Route::get('/j/{short_code}', function (Request $request, $short_code) {
     $referer = $request->headers->get('referer');
     $country = null;
     try {
-        $geo = Http::get("https://ipapi.co/{$ip}/country/");
+        $geo = Http::get("https://ipapi.co/{$ip}/json/");
         if ($geo->ok()) {
-            $country = $geo->body();
+            $json = $geo->json();
+            $country = $json['country_name'] ?? null;
         }
     } catch (\Exception $e) {}
 

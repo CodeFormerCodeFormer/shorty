@@ -99,4 +99,14 @@ class ShortUrlController extends Controller
             'chart' => $chart,
         ]);
     }
+
+    public function countryClicks($id)
+    {
+        $shortUrl = ShortUrl::where('user_id', auth()->id())->findOrFail($id);
+        $visits = ShortUrlVisit::where('short_url_id', $shortUrl->id)
+            ->whereNotNull('country')
+            ->get();
+        $byCountry = $visits->groupBy('country')->map(fn($v) => count($v));
+        return response()->json($byCountry);
+    }
 }

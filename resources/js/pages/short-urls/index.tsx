@@ -6,6 +6,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import AppLayout from '@/layouts/app-layout';
 import CircularProgress from '@mui/material/CircularProgress';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
+import { scaleLinear } from 'd3-scale';
 
 const sortableColumns = [
   { key: 'id', label: 'ID' },
@@ -27,6 +29,7 @@ export default function ShortUrlsIndex() {
   const [tab, setTab] = useState(0);
   const [visits, setVisits] = useState<any[] | null>(null);
   const [chart, setChart] = useState<any[] | null>(null);
+  const [countryClicks, setCountryClicks] = useState<Record<string, number> | null>(null);
   const [loadingVisits, setLoadingVisits] = useState(false);
   const { data, setData, post, processing, errors, reset } = useForm({
     title: '',
@@ -63,15 +66,24 @@ export default function ShortUrlsIndex() {
     setViewOpen(true);
     setVisits(null);
     setChart(null);
+    setCountryClicks(null);
     setLoadingVisits(true);
     try {
       const res = await fetch(`/short-urls/${url.id}`);
       const data = await res.json();
       setVisits(data.visits);
       setChart(data.chart);
+      // Busca cliques por país
+      const countryRes = await fetch(`/short-urls/${url.id}/country-clicks`);
+      if (countryRes.ok) {
+        setCountryClicks(await countryRes.json());
+      } else {
+        setCountryClicks(null);
+      }
     } catch (e) {
       setVisits([]);
       setChart([]);
+      setCountryClicks(null);
     }
     setLoadingVisits(false);
   };
@@ -367,8 +379,34 @@ export default function ShortUrlsIndex() {
                   </Box>
                 )}
                 {tab === 2 && (
-                  <Box>
-                    <Typography variant="body2">Map (coming soon)</Typography>
+                  <Box minHeight={350}>
+                    <ComposableMap projectionConfig={{ scale: 140 }} width={800} height={350} style={{ width: '100%', height: 'auto' }}>
+                      <Geographies geography="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json">
+                        {({ geographies }) => {
+                          const dataByCountryName = countryClicks ?? {};
+                          const max = Math.max(1, ...Object.values(dataByCountryName));
+                          const colorScale = scaleLinear()
+                            .domain([0, max])
+                            .range(["#e0f2fe", "#0284c7"]);
+                          return geographies.map(geo => {
+                            const name = geo.properties.name;
+                            const count = dataByCountryName[name] ?? 0;
+                            return (
+                              <Geography
+                                key={geo.rsmKey}
+                                geography={geo}
+                                fill={count ? colorScale(count) : "#F5F4F6"}
+                                stroke="#DDD"
+                                style={{ outline: 'none' }}
+                              />
+                            );
+                          });
+                        }}
+                      </Geographies>
+                    </ComposableMap>
+                    <Typography variant="caption" color="text.secondary" mt={1}>
+                      {countryClicks ? 'Mapa de calor por país (dados reais)' : 'Mapa de calor por país (mock)'}
+                    </Typography>
                   </Box>
                 )}
               </Box>
