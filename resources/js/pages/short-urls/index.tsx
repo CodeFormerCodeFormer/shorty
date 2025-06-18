@@ -169,6 +169,15 @@ export default function ShortUrlsIndex() {
         }
     };
 
+    // Atualiza a listagem ao deletar uma short url e volta para a primeira página
+    React.useEffect(() => {
+        function reloadList() {
+            router.get('/short-urls', { page: 1, search, per_page: perPage });
+        }
+        window.addEventListener('short-url-deleted', reloadList);
+        return () => window.removeEventListener('short-url-deleted', reloadList);
+    }, [search, perPage]);
+
     return (
         <AppLayout breadcrumbs={[{ title: 'My Short URLs', href: '/short-urls' }]}>
             <Box sx={{ p: { xs: 1, sm: 2, md: 4 } }}>

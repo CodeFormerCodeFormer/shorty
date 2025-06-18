@@ -90,6 +90,27 @@ export default function ShortUrlViewModal({
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
+    // Função para deletar a short url
+    async function handleDelete() {
+        if (!selectedUrl) return;
+        setDeleting(true);
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        await fetch(`/short-urls/${selectedUrl.id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token || '',
+            },
+            credentials: 'same-origin',
+        });
+        setDeleting(false);
+        setConfirmOpen(false);
+        handleViewClose();
+        // Chama evento customizado para recarregar a listagem
+        window.dispatchEvent(new CustomEvent('short-url-deleted'));
+    }
+
     return (
         <Dialog
             open={viewOpen}
@@ -380,29 +401,7 @@ export default function ShortUrlViewModal({
                     <Button onClick={() => setConfirmOpen(false)} disabled={deleting}>
                         Cancel
                     </Button>
-                    <Button
-                        color="error"
-                        startIcon={<DeleteIcon />}
-                        onClick={async () => {
-                            if (!selectedUrl) return;
-                            setDeleting(true);
-                            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                            await fetch(`/short-urls/${selectedUrl.id}`, {
-                                method: 'DELETE',
-                                headers: {
-                                    'X-Requested-With': 'XMLHttpRequest',
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': token || '',
-                                },
-                                credentials: 'same-origin', // garante envio dos cookies de sessão
-                            });
-                            setDeleting(false);
-                            setConfirmOpen(false);
-                            handleViewClose();
-                            window.location.reload();
-                        }}
-                        disabled={deleting}
-                    >
+                    <Button color="error" startIcon={<DeleteIcon />} onClick={handleDelete} disabled={deleting}>
                         Delete
                     </Button>
                 </DialogActions>
