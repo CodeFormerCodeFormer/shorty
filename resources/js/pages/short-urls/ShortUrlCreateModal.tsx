@@ -1,7 +1,33 @@
 import CloseIcon from '@mui/icons-material/Close';
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Stack, TextField } from '@mui/material';
 
-export default function ShortUrlCreateModal({ open, handleClose, handleSubmit, handleChange, data, errors, processing, success }: any) {
+export interface ShortUrlCreateModalProps {
+    open: boolean;
+    handleClose: () => void;
+    handleSubmit: (e: React.FormEvent) => void;
+    handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    data: {
+        title: string;
+        original_url: string;
+        short_code: string;
+        expires_at: string;
+        max_visits: string;
+    };
+    errors: Record<string, string>;
+    processing: boolean;
+    success: string;
+}
+
+export default function ShortUrlCreateModal({
+    open,
+    handleClose,
+    handleSubmit,
+    handleChange,
+    data,
+    errors,
+    processing,
+    success,
+}: ShortUrlCreateModalProps) {
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
             <DialogTitle>

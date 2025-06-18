@@ -19,6 +19,7 @@ import {
     TextField,
     Tooltip as TooltipMUI,
 } from '@mui/material';
+import { ShortUrl } from './ShortUrlViewModal';
 
 const sortableColumns = [
     { key: 'id', label: 'ID' },
@@ -30,15 +31,33 @@ const sortableColumns = [
     { key: 'max_visits', label: 'Max Visits' },
 ];
 
+export interface ShortUrlsListProps {
+    shortUrls: {
+        data: ShortUrl[];
+        last_page: number;
+        current_page: number;
+    };
+    sort: string;
+    direction: 'asc' | 'desc';
+    search: string;
+    setSearch: (value: string) => void;
+    perPage: number;
+    handleSearch: (e: React.FormEvent) => void;
+    handlePerPageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handlePageChange: (_: React.ChangeEvent<unknown>, value: number) => void;
+    handleSort: (column: string) => void;
+    handleView: (url: ShortUrl) => void;
+    handleShareShortUrl: (shortUrl: string) => void;
+    handleOpen: () => void;
+}
+
 export default function ShortUrlsList({
     shortUrls,
-    filters,
     sort,
     direction,
     search,
     setSearch,
     perPage,
-    setPerPage,
     handleSearch,
     handlePerPageChange,
     handlePageChange,
@@ -46,7 +65,7 @@ export default function ShortUrlsList({
     handleView,
     handleShareShortUrl,
     handleOpen,
-}: any) {
+}: ShortUrlsListProps) {
     return (
         <>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mb={2} alignItems="center">
@@ -86,7 +105,7 @@ export default function ShortUrlsList({
                                 </TableCell>
                             </TableRow>
                         )}
-                        {shortUrls.data.map((url: any) => (
+                        {shortUrls.data.map((url) => (
                             <TableRow key={url.id}>
                                 <TableCell>{url.id}</TableCell>
                                 <TableCell>

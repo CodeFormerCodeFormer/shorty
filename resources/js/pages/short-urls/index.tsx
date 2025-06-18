@@ -2,23 +2,33 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Box } from '@mui/material';
 import React, { useState } from 'react';
-import ShortUrlCreateModal from './ShortUrlCreateModal';
+import ShortUrlCreateModal, { ShortUrlCreateModalProps } from './ShortUrlCreateModal';
 import ShortUrlsList from './ShortUrlsList';
-import ShortUrlViewModal from './ShortUrlViewModal';
+import ShortUrlViewModal, { ShortUrl, ShortUrlChartPoint, ShortUrlVisit } from './ShortUrlViewModal';
 
 export default function ShortUrlsIndex() {
-    const { shortUrls, filters, sort, direction } = usePage().props as any;
-    const [search, setSearch] = useState(filters?.search || '');
-    const [perPage, setPerPage] = useState(filters?.per_page || 10);
+    // Cast props para unknown antes de tipar
+    const { shortUrls, filters, sort, direction } = usePage().props as unknown as {
+        shortUrls: {
+            data: ShortUrl[];
+            last_page: number;
+            current_page: number;
+        };
+        filters: { search?: string; per_page?: number };
+        sort: string;
+        direction: 'asc' | 'desc';
+    };
+    const [search, setSearch] = useState<string>(filters?.search || '');
+    const [perPage, setPerPage] = useState<number>(filters?.per_page || 10);
     const [open, setOpen] = useState(false);
     const [viewOpen, setViewOpen] = useState(false);
-    const [selectedUrl, setSelectedUrl] = useState<any>(null);
+    const [selectedUrl, setSelectedUrl] = useState<ShortUrl | null>(null);
     const [tab, setTab] = useState(0);
-    const [visits, setVisits] = useState<any[] | null>(null);
-    const [chart, setChart] = useState<any[] | null>(null);
+    const [visits, setVisits] = useState<ShortUrlVisit[] | null>(null);
+    const [chart, setChart] = useState<ShortUrlChartPoint[] | null>(null);
     const [countryClicks, setCountryClicks] = useState<Record<string, number> | null>(null);
     const [loadingVisits, setLoadingVisits] = useState(false);
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset } = useForm<ShortUrlCreateModalProps['data']>({
         title: '',
         original_url: '',
         short_code: '',
@@ -26,7 +36,7 @@ export default function ShortUrlsIndex() {
         max_visits: '',
     });
     const [success, setSuccess] = useState('');
-    const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
+    const [, setHoveredCountry] = useState<string | null>(null);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -38,7 +48,7 @@ export default function ShortUrlsIndex() {
         router.get('/short-urls', { search, per_page: e.target.value });
     };
 
-    const handlePageChange = (_: any, value: number) => {
+    const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
         router.get('/short-urls', { search, per_page: perPage, page: value });
     };
 
@@ -49,7 +59,7 @@ export default function ShortUrlsIndex() {
     };
     const handleClose = () => setOpen(false);
 
-    const handleView = async (url: any) => {
+    const handleView = async (url: ShortUrl) => {
         setSelectedUrl(url);
         setViewOpen(true);
         setVisits(null);
@@ -67,7 +77,7 @@ export default function ShortUrlsIndex() {
             } else {
                 setCountryClicks(null);
             }
-        } catch (e) {
+        } catch {
             setVisits([]);
             setChart([]);
             setCountryClicks(null);
@@ -132,7 +142,9 @@ export default function ShortUrlsIndex() {
                             title: 'Short URL QR Code',
                             text: 'Veja o QR code do link encurtado!',
                         });
-                    } catch (e) {}
+                    } catch {
+                        // usuário cancelou ou não suportado
+                    }
                 } else {
                     alert('Compartilhamento não suportado neste navegador.');
                 }
@@ -148,7 +160,9 @@ export default function ShortUrlsIndex() {
                     text: 'Confira este link encurtado:',
                     url: shortUrl,
                 });
-            } catch (e) {}
+            } catch {
+                // usuário cancelou ou não suportado
+            }
         } else {
             navigator.clipboard.writeText(shortUrl);
             alert('Link copiado para a área de transferência!');
@@ -161,13 +175,11 @@ export default function ShortUrlsIndex() {
                 <Head title="My URLs" />
                 <ShortUrlsList
                     shortUrls={shortUrls}
-                    filters={filters}
                     sort={sort}
                     direction={direction}
                     search={search}
                     setSearch={setSearch}
                     perPage={perPage}
-                    setPerPage={setPerPage}
                     handleSearch={handleSearch}
                     handlePerPageChange={handlePerPageChange}
                     handlePageChange={handlePageChange}
@@ -196,7 +208,6 @@ export default function ShortUrlsIndex() {
                     loadingVisits={loadingVisits}
                     chart={chart}
                     countryClicks={countryClicks}
-                    hoveredCountry={hoveredCountry}
                     setHoveredCountry={setHoveredCountry}
                     handleShareShortUrl={handleShareShortUrl}
                     handleDownloadQr={handleDownloadQr}

@@ -27,6 +27,48 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
+// Tipos auxiliares
+export interface ShortUrl {
+    id: number;
+    title: string;
+    original_url: string;
+    short_code: string;
+    expires_at?: string | null;
+    visit_count: number;
+    max_visits?: number | null;
+    created_at?: string | null;
+}
+
+export interface ShortUrlVisit {
+    id: number;
+    visited_at?: string | null;
+    ip_address: string;
+    country?: string | null;
+    user_agent: string;
+    referer?: string | null;
+}
+
+export interface ShortUrlChartPoint {
+    date: string;
+    count: number;
+}
+
+export interface ShortUrlViewModalProps {
+    viewOpen: boolean;
+    handleViewClose: () => void;
+    selectedUrl: ShortUrl | null;
+    tab: number;
+    handleTabChange: (_event: React.SyntheticEvent, newValue: number) => void;
+    visits: ShortUrlVisit[] | null;
+    loadingVisits: boolean;
+    chart: ShortUrlChartPoint[] | null;
+    countryClicks: Record<string, number> | null;
+    setHoveredCountry: (country: string | null) => void;
+    handleShareShortUrl: (shortUrl: string) => void;
+    handleDownloadQr: (url: ShortUrl) => void;
+    handleShareQr: (url: ShortUrl) => void;
+}
+
 export default function ShortUrlViewModal({
     viewOpen,
     handleViewClose,
@@ -37,12 +79,11 @@ export default function ShortUrlViewModal({
     loadingVisits,
     chart,
     countryClicks,
-    hoveredCountry,
     setHoveredCountry,
     handleShareShortUrl,
     handleDownloadQr,
     handleShareQr,
-}: any) {
+}: ShortUrlViewModalProps) {
     return (
         <Dialog
             open={viewOpen}
@@ -154,7 +195,7 @@ export default function ShortUrlViewModal({
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {visits.map((v: any) => (
+                                            {visits.map((v) => (
                                                 <TableRow key={v.id}>
                                                     <TableCell>{v.visited_at ? new Date(v.visited_at).toLocaleString() : '-'}</TableCell>
                                                     <TableCell>{v.ip_address}</TableCell>
@@ -223,8 +264,8 @@ export default function ShortUrlViewModal({
                                             style={{ width: '100%', height: 'auto' }}
                                         >
                                             <Geographies geography="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json">
-                                                {({ geographies }) =>
-                                                    geographies.map((geo: any) => {
+                                                {({ geographies }: { geographies: Array<{ rsmKey: string; properties: { name: string } }> }) =>
+                                                    geographies.map((geo) => {
                                                         const name = geo.properties.name;
                                                         const count = dataByCountryName[name] ?? 0;
                                                         const fillColor = count ? colorScale(count) : '#F5F4F6';
@@ -238,7 +279,6 @@ export default function ShortUrlViewModal({
                                                                     geography={geo}
                                                                     fill={fillColor}
                                                                     stroke="#DDD"
-                                                                    style={{ outline: 'none', cursor: count ? 'pointer' : 'default' }}
                                                                     onMouseEnter={() => setHoveredCountry(name)}
                                                                     onMouseLeave={() => setHoveredCountry(null)}
                                                                 />
