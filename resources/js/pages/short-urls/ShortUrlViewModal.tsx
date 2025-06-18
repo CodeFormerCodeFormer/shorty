@@ -36,6 +36,7 @@ export interface ShortUrl {
     title: string;
     original_url: string;
     short_code: string;
+    active: boolean;
     expires_at?: string | null;
     visit_count: number;
     max_visits?: number | null;
@@ -189,6 +190,14 @@ export default function ShortUrlViewModal({
                                 </Typography>
                                 <Typography variant="subtitle1" gutterBottom>
                                     <b>Created at:</b> {selectedUrl.created_at ? new Date(selectedUrl.created_at).toLocaleString() : '-'}
+                                </Typography>
+                                <Typography variant="subtitle1" gutterBottom>
+                                    <b>Status:</b>{' '}
+                                    {selectedUrl.active ? (
+                                        <span style={{ color: '#388e3c', fontWeight: 600 }}>Ativo</span>
+                                    ) : (
+                                        <span style={{ color: '#d32f2f', fontWeight: 600 }}>Inativo</span>
+                                    )}
                                 </Typography>
                             </Box>
                             <Box flex={2} display="flex" flexDirection="column" alignItems="center" justifyContent="center" gap={2}>

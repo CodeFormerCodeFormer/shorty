@@ -24,10 +24,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/short-urls/{id}', [ShortUrlController::class, 'show'])->name('short-urls.show');
     Route::get('/short-urls/{id}/country-clicks', [ShortUrlController::class, 'countryClicks'])->name('short-urls.country-clicks');
     Route::delete('/short-urls/{id}', [ShortUrlController::class, 'destroy'])->name('short-urls.destroy');
+    Route::patch('/short-urls/{id}/toggle-active', [App\Http\Controllers\ShortUrlController::class, 'toggleActive'])
+        ->middleware(['auth', 'verified'])
+        ->name('short-urls.toggle-active');
 });
 
 Route::get('/j/{short_code}', function (Request $request, $short_code) {
     $shortUrl = ShortUrl::where('short_code', $short_code)->firstOrFail();
+
+    // Bloqueia se estiver inativo
+    if (!$shortUrl->active) {
+        abort(410, 'Este link está inativo.');
+    }
 
     // Limite de acessos
     if ($shortUrl->max_visits && $shortUrl->visit_count >= $shortUrl->max_visits) {

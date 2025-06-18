@@ -20,10 +20,12 @@ import {
     TextField,
     Tooltip as TooltipMUI,
 } from '@mui/material';
+import React from 'react';
+import ShortUrlActiveToggle from '../../components/ShortUrlActiveToggle';
 import { ShortUrl } from './ShortUrlViewModal';
 
 const sortableColumns = [
-    { key: 'id', label: 'ID' },
+    { key: 'active', label: 'Ativo' },
     { key: 'title', label: 'Title' },
     { key: 'original_url', label: 'Original URL' },
     { key: 'short_code', label: 'Short URL' },
@@ -67,6 +69,30 @@ export default function ShortUrlsList({
     handleShareShortUrl,
     handleOpen,
 }: ShortUrlsListProps) {
+    const [toggleLoading, setToggleLoading] = React.useState<number | null>(null);
+    const [urls, setUrls] = React.useState(shortUrls.data);
+
+    React.useEffect(() => {
+        setUrls(shortUrls.data);
+    }, [shortUrls.data]);
+
+    async function handleToggleActive(urlId: number) {
+        setToggleLoading(urlId);
+        // Optimistic update
+        setUrls((prev) => prev.map((url) => (url.id === urlId ? { ...url, active: !url.active } : url)));
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        await fetch(`/short-urls/${urlId}/toggle-active`, {
+            method: 'PATCH',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token || '',
+            },
+            credentials: 'same-origin',
+        });
+        setToggleLoading(null);
+    }
+
     return (
         <>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mb={2} alignItems="center">
@@ -99,16 +125,22 @@ export default function ShortUrlsList({
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {shortUrls.data.length === 0 && (
+                        {urls.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={7} align="center">
                                     No URLs found.
                                 </TableCell>
                             </TableRow>
                         )}
-                        {shortUrls.data.map((url) => (
+                        {urls.map((url) => (
                             <TableRow key={url.id}>
-                                <TableCell>{url.id}</TableCell>
+                                <TableCell>
+                                    <ShortUrlActiveToggle
+                                        active={url.active}
+                                        loading={toggleLoading === url.id}
+                                        onChange={() => handleToggleActive(url.id)}
+                                    />
+                                </TableCell>
                                 <TableCell>
                                     <Link
                                         href="#"

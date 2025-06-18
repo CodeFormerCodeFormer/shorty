@@ -124,6 +124,14 @@ class ShortUrlController extends Controller
         return response()->noContent();
     }
 
+    public function toggleActive($id)
+    {
+        $shortUrl = ShortUrl::where('user_id', auth()->id())->findOrFail($id);
+        $shortUrl->active = !$shortUrl->active;
+        $shortUrl->save();
+        return response()->json(['active' => $shortUrl->active]);
+    }
+
     /**
      * Validates if a short code can be reused according to the 1-year rule.
      */
