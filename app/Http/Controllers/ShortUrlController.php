@@ -53,7 +53,14 @@ class ShortUrlController extends Controller
         $validated = $request->validate([
             'original_url' => 'required|url|max:2048',
             'title' => 'required|string|max:255',
-            'short_code' => 'nullable|alpha_dash|min:3|max:32|unique:short_urls,short_code',
+            'short_code' => [
+                'nullable',
+                'alpha_dash',
+                'min:3',
+                'max:32',
+                // Use extracted method for validation
+                fn($attribute, $value, $fail) => $this->validateShortCodeReuse($value, $fail),
+            ],
             'expires_at' => 'nullable|date',
             'max_visits' => 'nullable|integer|min:1',
         ]);
@@ -115,5 +122,28 @@ class ShortUrlController extends Controller
         $shortUrl = ShortUrl::where('user_id', auth()->id())->findOrFail($id);
         $shortUrl->delete();
         return response()->noContent();
+    }
+
+    /**
+     * Validates if a short code can be reused according to the 1-year rule.
+     */
+    private function validateShortCodeReuse($value, $fail)
+    {
+        if ($value) {
+            $existing = ShortUrl::withTrashed()
+                ->where('short_code', $value)
+                ->orderByDesc('deleted_at')
+                ->first();
+            if ($existing) {
+                if (is_null($existing->deleted_at)) {
+                    $fail('This short code has already been used and cannot be reused.');
+                } else {
+                    $deletedAt = Carbon::parse($existing->deleted_at);
+                    if ($deletedAt->gt(now()->subYear())) {
+                        $fail('This short code was deleted less than 1 year ago and cannot be reused yet.');
+                    }
+                }
+            }
+        }
     }
 }
