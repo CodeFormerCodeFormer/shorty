@@ -19,8 +19,8 @@ class ShortUrlController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('original_url', 'like', "%$search%")
-                  ->orWhere('short_code', 'like', "%$search%")
-                  ->orWhere('title', 'like', "%$search%")
+                    ->orWhere('short_code', 'like', "%$search%")
+                    ->orWhere('title', 'like', "%$search%")
                 ;
             });
         }
@@ -108,5 +108,12 @@ class ShortUrlController extends Controller
             ->get();
         $byCountry = $visits->groupBy('country')->map(fn($v) => count($v));
         return response()->json($byCountry);
+    }
+
+    public function destroy($id)
+    {
+        $shortUrl = ShortUrl::where('user_id', auth()->id())->findOrFail($id);
+        $shortUrl->delete();
+        return response()->noContent();
     }
 }

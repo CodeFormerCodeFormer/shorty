@@ -1,5 +1,6 @@
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import ShareIcon from '@mui/icons-material/Share';
 import {
@@ -25,6 +26,7 @@ import {
 } from '@mui/material';
 import { scaleLinear } from 'd3-scale';
 import { QRCodeCanvas } from 'qrcode.react';
+import React, { useState } from 'react';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
@@ -85,6 +87,9 @@ export default function ShortUrlViewModal({
     handleDownloadQr,
     handleShareQr,
 }: ShortUrlViewModalProps) {
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+
     return (
         <Dialog
             open={viewOpen}
@@ -363,8 +368,45 @@ export default function ShortUrlViewModal({
                 )}
             </DialogContent>
             <DialogActions>
+                <Button color="error" startIcon={<DeleteIcon />} onClick={() => setConfirmOpen(true)} disabled={!selectedUrl}>
+                    Delete
+                </Button>
                 <Button onClick={handleViewClose}>Close</Button>
             </DialogActions>
+            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+                <DialogTitle>Confirm deletion</DialogTitle>
+                <DialogContent>Are you sure you want to delete this short URL?</DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmOpen(false)} disabled={deleting}>
+                        Cancel
+                    </Button>
+                    <Button
+                        color="error"
+                        startIcon={<DeleteIcon />}
+                        onClick={async () => {
+                            if (!selectedUrl) return;
+                            setDeleting(true);
+                            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                            await fetch(`/short-urls/${selectedUrl.id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': token || '',
+                                },
+                                credentials: 'same-origin', // garante envio dos cookies de sessão
+                            });
+                            setDeleting(false);
+                            setConfirmOpen(false);
+                            handleViewClose();
+                            window.location.reload();
+                        }}
+                        disabled={deleting}
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Dialog>
     );
 }

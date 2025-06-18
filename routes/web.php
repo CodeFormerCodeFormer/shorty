@@ -23,6 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/short-urls', [ShortUrlController::class, 'store'])->name('short-urls.store');
     Route::get('/short-urls/{id}', [ShortUrlController::class, 'show'])->name('short-urls.show');
     Route::get('/short-urls/{id}/country-clicks', [ShortUrlController::class, 'countryClicks'])->name('short-urls.country-clicks');
+    Route::delete('/short-urls/{id}', [ShortUrlController::class, 'destroy'])->name('short-urls.destroy');
 });
 
 Route::get('/j/{short_code}', function (Request $request, $short_code) {
@@ -48,7 +49,8 @@ Route::get('/j/{short_code}', function (Request $request, $short_code) {
             $json = $geo->json();
             $country = $json['country_name'] ?? null;
         }
-    } catch (\Exception $e) {}
+    } catch (\Exception $e) {
+    }
 
     // Registra acesso
     DB::transaction(function () use ($shortUrl, $ip, $country, $userAgent, $referer) {
@@ -76,5 +78,5 @@ Route::get('/j/{short_code}', function (Request $request, $short_code) {
     return redirect()->away($shortUrl->original_url);
 })->name('short-urls.redirect');
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
