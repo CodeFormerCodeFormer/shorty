@@ -1,5 +1,6 @@
 import CloseIcon from '@mui/icons-material/Close';
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Stack, TextField } from '@mui/material';
+import React, { useEffect, useRef } from 'react';
 
 export interface ShortUrlCreateModalProps {
     open: boolean;
@@ -28,6 +29,17 @@ export default function ShortUrlCreateModal({
     processing,
     success,
 }: ShortUrlCreateModalProps) {
+    const titleRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (open) {
+            // Timeout para garantir que o Dialog já abriu
+            setTimeout(() => {
+                titleRef.current?.focus();
+            }, 100);
+        }
+    }, [open]);
+
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
             <DialogTitle>
@@ -53,6 +65,7 @@ export default function ShortUrlCreateModal({
                             helperText={errors.title}
                             fullWidth
                             required
+                            inputRef={titleRef}
                         />
                         <TextField
                             label="Original URL"
