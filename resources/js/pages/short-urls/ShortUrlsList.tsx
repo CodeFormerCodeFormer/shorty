@@ -1,4 +1,5 @@
 import AddIcon from '@mui/icons-material/Add';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ShareIcon from '@mui/icons-material/Share';
 import {
     Box,
@@ -130,6 +131,19 @@ export default function ShortUrlsList({
                                         <Link href={`/j/${url.short_code}`} target="_blank" rel="noopener noreferrer">
                                             {window.location.origin}/j/{url.short_code}
                                         </Link>
+                                        <TooltipMUI title="Copiar link curto" arrow>
+                                            <IconButton
+                                                size="small"
+                                                color="primary"
+                                                sx={{ ml: 0.5, p: '3px' }}
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(`${window.location.origin}/j/${url.short_code}`);
+                                                }}
+                                                aria-label="Copiar link curto"
+                                            >
+                                                <ContentCopyIcon fontSize="small" />
+                                            </IconButton>
+                                        </TooltipMUI>
                                         <TooltipMUI title="Compartilhar" arrow>
                                             <IconButton
                                                 size="small"

@@ -1,4 +1,5 @@
 import CloseIcon from '@mui/icons-material/Close';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
 import ShareIcon from '@mui/icons-material/Share';
 import {
@@ -119,6 +120,19 @@ export default function ShortUrlViewModal({
                                         <Link href={`/j/${selectedUrl.short_code}`} target="_blank" rel="noopener noreferrer">
                                             {window.location.origin}/j/{selectedUrl.short_code}
                                         </Link>
+                                        <TooltipMUI title="Copiar link curto" arrow>
+                                            <IconButton
+                                                size="small"
+                                                color="primary"
+                                                sx={{ ml: 0.5, p: '3px' }}
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(`${window.location.origin}/j/${selectedUrl.short_code}`);
+                                                }}
+                                                aria-label="Copiar link curto"
+                                            >
+                                                <ContentCopyIcon fontSize="small" />
+                                            </IconButton>
+                                        </TooltipMUI>
                                         <TooltipMUI title="Compartilhar" arrow>
                                             <IconButton
                                                 size="small"
@@ -155,14 +169,37 @@ export default function ShortUrlViewModal({
                                 <QRCodeCanvas
                                     id="qr-code"
                                     value={`${window.location.origin}/j/${selectedUrl.short_code}`}
-                                    size={128}
-                                    includeMargin={true}
+                                    size={225}
+                                    marginSize={2}
                                     data-qrcode={selectedUrl.short_code}
                                 />
                                 <Box display="flex" gap={1}>
                                     <Button variant="outlined" size="small" onClick={() => handleDownloadQr(selectedUrl)}>
                                         <DownloadIcon fontSize="small" sx={{ mr: 0.5 }} />
                                         Download
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        onClick={() => {
+                                            const canvas = document.querySelector(
+                                                'canvas[data-qrcode="' + selectedUrl.short_code + '"]',
+                                            ) as HTMLCanvasElement;
+                                            if (canvas) {
+                                                canvas.toBlob(async (blob) => {
+                                                    if (blob) {
+                                                        try {
+                                                            await navigator.clipboard.write([new window.ClipboardItem({ [blob.type]: blob })]);
+                                                        } catch {
+                                                            alert('Não foi possível copiar a imagem do QR Code.');
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <ContentCopyIcon fontSize="small" sx={{ mr: 0.5 }} />
+                                        Copy
                                     </Button>
                                     <Button variant="outlined" size="small" onClick={() => handleShareQr(selectedUrl)}>
                                         <ShareIcon fontSize="small" sx={{ mr: 0.5 }} />
@@ -175,7 +212,6 @@ export default function ShortUrlViewModal({
                             <Tab label="Clicks" />
                             <Tab label="Chart" />
                             <Tab label="Map" />
-                            <Tab label="QR Code" />
                         </Tabs>
                         {tab === 0 && (
                             <Box>
@@ -323,31 +359,6 @@ export default function ShortUrlViewModal({
                                     </Box>
                                 );
                             })()}
-                        {tab === 3 && (
-                            <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
-                                <Typography variant="subtitle1" gutterBottom>
-                                    QR Code for Short URL
-                                </Typography>
-                                <QRCodeCanvas
-                                    id="qr-code"
-                                    value={`${window.location.origin}/j/${selectedUrl.short_code}`}
-                                    size={256}
-                                    style={{ height: 'auto', maxWidth: '100%', width: 256 }}
-                                />
-                                <Typography variant="caption" color="text.secondary" mt={1}>
-                                    Scan the QR code or click the link below:
-                                </Typography>
-                                <Link
-                                    href={`/j/${selectedUrl.short_code}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    variant="body2"
-                                    sx={{ wordBreak: 'break-all' }}
-                                >
-                                    {window.location.origin}/j/{selectedUrl.short_code}
-                                </Link>
-                            </Box>
-                        )}
                     </Box>
                 )}
             </DialogContent>
