@@ -202,11 +202,12 @@ export default function ShortUrlsList({
             <Box mt={1} mb={1} display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
                 <Box fontSize={14} color="text.secondary">
                     Showing {urls.length} record{urls.length !== 1 ? 's' : ''} on this page
-                    {shortUrls.last_page > 1 &&
-                        ` (page ${shortUrls.current_page} of ${shortUrls.last_page})`
-                    }
+                    {shortUrls.last_page > 1 && ` (page ${shortUrls.current_page} of ${shortUrls.last_page})`}
                     {typeof shortUrls.total === 'number' && (
-                        <> — Total: <b>{shortUrls.total}</b> record{shortUrls.total !== 1 ? 's' : ''}</>
+                        <>
+                            {' '}
+                            — Total: <b>{shortUrls.total}</b> record{shortUrls.total !== 1 ? 's' : ''}
+                        </>
                     )}
                 </Box>
             </Box>

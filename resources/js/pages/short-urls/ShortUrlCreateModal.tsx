@@ -33,7 +33,7 @@ export default function ShortUrlCreateModal({
 
     useEffect(() => {
         if (open) {
-            // Timeout para garantir que o Dialog já abriu
+            // Timeout to ensure the Dialog is already open
             setTimeout(() => {
                 titleRef.current?.focus();
             }, 100);

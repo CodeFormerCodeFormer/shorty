@@ -143,10 +143,10 @@ export default function ShortUrlsIndex() {
                             text: 'Veja o QR code do link encurtado!',
                         });
                     } catch {
-                        // usuário cancelou ou não suportado
+                        // user cancelled or not supported
                     }
                 } else {
-                    alert('Compartilhamento não suportado neste navegador.');
+                    alert('Sharing is not supported in this browser.');
                 }
             });
         }
@@ -161,15 +161,15 @@ export default function ShortUrlsIndex() {
                     url: shortUrl,
                 });
             } catch {
-                // usuário cancelou ou não suportado
+                // user cancelled or not supported
             }
         } else {
             navigator.clipboard.writeText(shortUrl);
-            alert('Link copiado para a área de transferência!');
+            alert('Link copied to clipboard!');
         }
     };
 
-    // Atualiza a listagem ao deletar uma short url e volta para a primeira página
+    // Updates the list when a short url is deleted and returns to the first page
     React.useEffect(() => {
         function reloadList() {
             router.get('/short-urls', { page: 1, search, per_page: perPage });
@@ -183,7 +183,10 @@ export default function ShortUrlsIndex() {
             <Box sx={{ p: { xs: 1, sm: 2, md: 4 } }}>
                 <Head title="My URLs" />
                 <ShortUrlsList
-                    shortUrls={shortUrls}
+                    shortUrls={{
+                        ...shortUrls,
+                        total: (shortUrls as any).total ?? shortUrls.data.length,
+                    }}
                     sort={sort}
                     direction={direction}
                     search={search}

@@ -91,7 +91,7 @@ export default function ShortUrlViewModal({
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
-    // Função para deletar a short url
+    // Function to delete the short url
     async function handleDelete() {
         if (!selectedUrl) return;
         setDeleting(true);
@@ -226,7 +226,7 @@ export default function ShortUrlViewModal({
                                                         try {
                                                             await navigator.clipboard.write([new window.ClipboardItem({ [blob.type]: blob })]);
                                                         } catch {
-                                                            alert('Não foi possível copiar a imagem do QR Code.');
+                                                            alert('Could not copy the QR Code image.');
                                                         }
                                                     }
                                                 });
