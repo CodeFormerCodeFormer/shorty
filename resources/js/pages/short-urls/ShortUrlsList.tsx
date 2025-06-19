@@ -39,6 +39,7 @@ export interface ShortUrlsListProps {
         data: ShortUrl[];
         last_page: number;
         current_page: number;
+        total: number;
     };
     sort: string;
     direction: 'asc' | 'desc';
@@ -201,9 +202,13 @@ export default function ShortUrlsList({
             <Box mt={1} mb={1} display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
                 <Box fontSize={14} color="text.secondary">
                     Exibindo {urls.length} registro{urls.length !== 1 ? 's' : ''} nesta página
-                    {shortUrls.last_page > 1 &&
-                        ` (página ${shortUrls.current_page} de ${shortUrls.last_page})`
-                    }
+                    {shortUrls.last_page > 1 && ` (página ${shortUrls.current_page} de ${shortUrls.last_page})`}
+                    {typeof shortUrls.total === 'number' && (
+                        <>
+                            {' '}
+                            — Total: <b>{shortUrls.total}</b> registro{shortUrls.total !== 1 ? 's' : ''}
+                        </>
+                    )}
                 </Box>
             </Box>
             <Stack direction="row" justifyContent="center" alignItems="center" mt={2}>
