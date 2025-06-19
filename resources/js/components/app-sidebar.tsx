@@ -1,6 +1,5 @@
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Folder } from 'lucide-react';
@@ -16,26 +15,26 @@ const mainNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
+        <>
+            <div>
+                <div>
+                    <div>
+                        <div>
                             <Link href="/dashboard" prefetch>
                                 <AppLogo />
                             </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <SidebarContent>
+            <div>
                 <NavMain items={mainNavItems} />
-            </SidebarContent>
+            </div>
 
-            <SidebarFooter>
+            <div>
                 <NavUser />
-            </SidebarFooter>
-        </Sidebar>
+            </div>
+        </>
     );
 }

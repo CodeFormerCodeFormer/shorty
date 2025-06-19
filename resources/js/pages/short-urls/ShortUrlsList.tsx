@@ -99,7 +99,7 @@ export default function ShortUrlsList({
                 <form onSubmit={handleSearch} style={{ flex: 1 }}>
                     <TextField label="Search URL" value={search} onChange={(e) => setSearch(e.target.value)} size="small" fullWidth />
                 </form>
-                <TextField select label="Records per page" value={perPage} onChange={handlePerPageChange} size="small" sx={{ minWidth: 120 }}>
+                <TextField select label="Records per page" value={perPage} onChange={handlePerPageChange} size="small" sx={{ minWidth: 150 }}>
                     {[10, 25, 50, 100].map((opt) => (
                         <MenuItem key={opt} value={opt}>
                             {opt}
