@@ -197,6 +197,15 @@ export default function ShortUrlsList({
                     </TableBody>
                 </Table>
             </TableContainer>
+            {/* Contagem de registros movida para baixo */}
+            <Box mt={1} mb={1} display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
+                <Box fontSize={14} color="text.secondary">
+                    Exibindo {urls.length} registro{urls.length !== 1 ? 's' : ''} nesta página
+                    {shortUrls.last_page > 1 &&
+                        ` (página ${shortUrls.current_page} de ${shortUrls.last_page})`
+                    }
+                </Box>
+            </Box>
             <Stack direction="row" justifyContent="center" alignItems="center" mt={2}>
                 <Pagination
                     count={shortUrls.last_page}
