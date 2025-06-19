@@ -8,8 +8,19 @@ import { Logout, Person } from '@mui/icons-material';
 import { AppBar, Box, Button, IconButton, Menu, Toolbar } from '@mui/material';
 import React, { PropsWithChildren, useState } from 'react';
 
-export default function AppNavbarLayout({ children, breadcrumbs = [] }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
-    const { auth } = usePage().props as any;
+type User = {
+    name: string;
+    email: string;
+};
+
+type PageProps = {
+    auth?: {
+        user: User;
+    };
+};
+
+export default function AppNavbarLayout({ children }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
+    const { auth } = usePage<PageProps>().props;
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {

@@ -13,6 +13,7 @@ export default function ShortUrlsIndex() {
             data: ShortUrl[];
             last_page: number;
             current_page: number;
+            total: number;
         };
         filters: { search?: string; per_page?: number };
         sort: string;
@@ -185,7 +186,7 @@ export default function ShortUrlsIndex() {
                 <ShortUrlsList
                     shortUrls={{
                         ...shortUrls,
-                        total: (shortUrls as any).total ?? shortUrls.data.length,
+                        total: shortUrls.total ?? shortUrls.data.length,
                     }}
                     sort={sort}
                     direction={direction}
