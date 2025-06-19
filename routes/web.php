@@ -10,14 +10,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 Route::get('/', function () {
-    return redirect()->route('dashboard');
+    return redirect()->route('short-urls.index');
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-
     Route::get('/short-urls', [ShortUrlController::class, 'index'])->name('short-urls.index');
     Route::get('/short-urls/create', fn() => Inertia::render('short-urls/create'))->name('short-urls.create');
     Route::post('/short-urls', [ShortUrlController::class, 'store'])->name('short-urls.store');
